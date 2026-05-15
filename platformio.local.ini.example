@@ -1,0 +1,8 @@
+; Copy to platformio.local.ini and set your COM port (one file for this machine only).
+; Find the port: pio device list
+; Windows: Device Manager > Ports (COM & LPT) — pick the ESP32 / USB-SERIAL / JTAG entry.
+; Close serial monitor before upload if Windows reports the port as busy.
+
+[env]
+upload_port = COM5
+monitor_port = COM5
