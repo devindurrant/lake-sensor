@@ -1,0 +1,109 @@
+# Lake Sensor -- Home Assistant trigger-based template sensors
+#
+# This turns the device's webhook POST into HA sensor entities. It is NOT an
+# automation -- do not paste it into the automation editor. It is config for
+# the `template:` integration.
+#
+# ---------------------------------------------------------------------------
+# WHERE THIS GOES
+# ---------------------------------------------------------------------------
+# Option A (recommended) -- Home Assistant "packages":
+#   1. In configuration.yaml, ensure you have:
+#        homeassistant:
+#          packages: !include_dir_named packages
+#   2. Copy this file to:   <HA config dir>/packages/lake_sensor.yaml
+#   3. Developer Tools > YAML > Check Configuration
+#   4. Restart Home Assistant
+#
+# Option B -- inline:
+#   Paste the `template:` block below directly into configuration.yaml. If you
+#   already have a top-level `template:` key, append this list item to it
+#   (you cannot have two `template:` keys in one file).
+#
+# ---------------------------------------------------------------------------
+# SUBSTITUTE BEFORE IT WORKS (this file ships with placeholders only)
+# ---------------------------------------------------------------------------
+#   REPLACE_WITH_WEBHOOK_ID
+#     Your internal HA webhook id. Find it in the webhook trigger you created
+#     (Settings > Automations & Scenes > your webhook automation), e.g.
+#     "-1dzNFk6ts_-vo0tcnT8T7CdX". Nabu Casa relays the public hooks.nabu.casa
+#     URL to /api/webhook/<this id>.
+#
+#   REPLACE_WITH_DEVICE_TOKEN
+#     The exact DEVICE_TOKEN string from the firmware's src/secrets.h. Must
+#     match character-for-character. POSTs whose token does not match are
+#     silently ignored (the sensors do not update).
+#
+# ---------------------------------------------------------------------------
+# AFTER IT WORKS
+# ---------------------------------------------------------------------------
+# Delete the original "Lake Sensor Webhook" automation -- it is redundant once
+# this template config owns the webhook. Delete it LAST: if removed before
+# this is live, Nabu Casa may drop the cloudhook mapping for the id.
+
+template:
+  - triggers:
+      - trigger: webhook
+        webhook_id: "REPLACE_WITH_WEBHOOK_ID"
+        allowed_methods:
+          - POST
+        local_only: false
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ trigger.json.token == 'REPLACE_WITH_DEVICE_TOKEN' }}
+    sensor:
+      - name: "Lake Surface Temperature"
+        unique_id: lake_surface_c
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "{{ trigger.json.surface_c | float(0) }}"
+        availability: "{{ trigger.json.surface_c is not none }}"
+
+      - name: "Lake Mid Temperature"
+        unique_id: lake_mid_c
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "{{ trigger.json.mid_c | float(0) }}"
+        availability: "{{ trigger.json.mid_c is not none }}"
+
+      - name: "Lake Deep Temperature"
+        unique_id: lake_deep_c
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "{{ trigger.json.deep_c | float(0) }}"
+        availability: "{{ trigger.json.deep_c is not none }}"
+
+      - name: "Lake Bottom Temperature"
+        unique_id: lake_bottom_c
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "{{ trigger.json.bottom_c | float(0) }}"
+        availability: "{{ trigger.json.bottom_c is not none }}"
+
+      - name: "Lake Depth"
+        unique_id: lake_depth_m
+        unit_of_measurement: "m"
+        device_class: distance
+        state_class: measurement
+        state: "{{ trigger.json.depth_m | float(0) }}"
+        availability: "{{ trigger.json.depth_m is not none }}"
+
+      - name: "Lake Loop Current"
+        unique_id: lake_current_ma
+        unit_of_measurement: "mA"
+        device_class: current
+        state_class: measurement
+        state: "{{ trigger.json.current_mA | float(0) }}"
+        availability: "{{ trigger.json.current_mA is not none }}"
+
+      - name: "Lake Sensor WiFi RSSI"
+        unique_id: lake_rssi_dbm
+        unit_of_measurement: "dBm"
+        device_class: signal_strength
+        state_class: measurement
+        state: "{{ trigger.json.rssi_dbm | int(0) }}"
